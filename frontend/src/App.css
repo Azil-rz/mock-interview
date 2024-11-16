@@ -1,0 +1,66 @@
+.App {
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+.chat-window {
+    width: 80%;
+    height: 700px;
+    margin: 20px auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column; /* 使消息垂直排列 */
+    gap: 10px; /* 消息之间的间距 */
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 15px;
+    word-wrap: break-word;
+}
+
+.message.user {
+    background-color: #007bff;
+    color: white;
+    align-self: flex-end; /* 右对齐 */
+    text-align: right;
+}
+
+.message.ai {
+    background-color: #e0e0e0;
+    color: black;
+    align-self: flex-start; /* 左对齐 */
+    text-align: left;
+}
+
+.input-area {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+input[type="text"] {
+    width: 70%;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}

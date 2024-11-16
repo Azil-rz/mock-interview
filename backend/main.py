@@ -6,6 +6,8 @@ import json
 import sys
 import os
 
+from starlette.websockets import WebSocketState
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from AI.main import MockInterviewAgent
 
@@ -20,10 +22,17 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def send_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+        if websocket.application_state == WebSocketState.CONNECTED:
+            try:
+                await websocket.send_text(message)
+            except WebSocketDisconnect:
+                print("WebSocket connection closed before sending message")
+        else:
+            print("WebSocket connection is not in CONNECTED state")
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -36,7 +45,7 @@ websocket_manager = ConnectionManager()
 async def websocket_endpoint(websocket: WebSocket):
     await websocket_manager.connect(websocket)
 
-    response = json.dumps({ 'status': 0, 'type': "connection", 'message': "connected" })
+    response = json.dumps({'status': 0, 'type': "connection", 'message': "connected"})
     await websocket_manager.send_message(response, websocket)
 
     mockInterviewAgent = MockInterviewAgent()
@@ -60,8 +69,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 while next_speaker is not mockInterviewAgent.ragUserProxyAgent and next_speaker != "auto":
                     # 使用异步回复更新groupchat
                     reply = await next_speaker.a_generate_reply(mockInterviewAgent.simulateGroupChat.messages)
-                    response = json.dumps({'content': reply, 'type': next_speaker.name})
-                    await websocket_manager.send_message(response, websocket)
+                    print(next_speaker.name, ': ', reply)
+                    if next_speaker is not mockInterviewAgent.questionsSelectorAssistantAgent:
+                        response = json.dumps({'content': reply, 'type': next_speaker.name})
+                        await websocket_manager.send_message(response, websocket)
                     mockInterviewAgent.simulateGroupChat.append({'content':reply, 'role': 'user', 'name': next_speaker.name}, next_speaker)
                     # 通过原有next_speaker_selection_func获取next speaker直到需要用户输入
                     next_speaker = mockInterviewAgent.next_speaker_selection_func(last_speaker=next_speaker, simulateGroupChat=mockInterviewAgent.simulateGroupChat)
